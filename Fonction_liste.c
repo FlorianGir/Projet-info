@@ -78,6 +78,9 @@ void affiche_lex(L_LEX p_lex) {
 	else if (p_lex->lex == HEXA) printf("HEXA \n");
 	else if (p_lex->lex == AUTRE) printf("AUTRE \n");
 	else if (p_lex->lex == REGISTRE) printf("REGISTRE \n");
+	else if (p_lex->lex == GUIL) printf("GUIL \n");
+	else if (p_lex->lex == PAR_O) printf("PAR_O \n");
+	else if (p_lex->lex == PAR_F) printf("PAR_F \n");
 	return;
 }
 
