@@ -1,0 +1,4 @@
+# Un commentaire...
+ etiq: .byte  4 
+	ADD $2, $3, $4 
+	J 0xABC
