@@ -4,8 +4,6 @@
 #include "Fonction_liste.h"
 
 
-
-
 // Gestion erreur caractere
 void erreur_carac() {
 	printf("erreur de caractere \n");	
@@ -40,7 +38,7 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 			printf("DEBUT %c \n", c);				//TEST
 			mot = ajout_queue_mot(mot, c);			
 	
-			if (isdigit(c)) {				// Si nombre dans [0;9]
+			if (isdigit(c) || (c == '-')) {				// Si nombre dans [0;9]
 				if (c == '0') A = DECIMAL_ZERO;		// Si c == 0, 0 ou hexadecimal
 				else A = DECIMAL;			// Sinon nombre decimal
 			}
@@ -56,10 +54,10 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 			else if (c == ',') {
 				lex = ajout_queue_lex(lex, VIRGULE, mot);
 				mot = NULL;
-				A = DEBUT;
 			}
 			else if (c == '$') A = REGISTRE;		// Si $, c'est un registre
-			else if (isalpha(c)) A = SYMBOLE; 		// isalpha() --> Test lettre 
+			else if (c == '"') A = GUIL;			// Si c'est un guillemet
+			else if (isalpha(c) || (c == '_')) A = SYMBOLE; 		// isalpha() --> Test lettre 
 			else {
 				printf("erreur de caractere \n");	// Gestion erreur
 				return ; 
@@ -175,7 +173,7 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 
 		case SYMBOLE:
 			printf("SYMBOLE %c \n", c);			// TEST
-			if (isalpha(c)) {
+			if (isalpha(c)||( c == '_')||isdigit(c)) {
 				A = SYMBOLE; 	
 				mot = ajout_queue_mot(mot, c);
 			}
@@ -237,7 +235,23 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 			}
 			else erreur_carac();		
 			break; 
-			
+
+		case GUIL:
+			printf("GUIL %c \n", c);			// TEST
+			if((c != '"') && (c != '\\')){
+				mot = ajout_queue_mot(mot, c);
+			}
+			else if (c == '\\'){
+				c = fgetc(fichier);
+				mot = ajout_queue_mot(mot, c);
+			}
+			else if (c == '"'){
+				mot = ajout_queue_mot(mot, c);
+				lex = ajout_queue_lex(lex, GUIL, mot);
+				mot = NULL;
+				A = DEBUT;
+			}
+			break;	
 
 		case REGISTRE:
 			printf("REGISTRE %c \n", c);			// TEST
@@ -315,10 +329,7 @@ int test_registre( int p, int u){
 
 
 
-
-
-
-// Gestion virgule 
+/*// Gestion virgule 
 void Virgule(L_LEX lex, MOT mot) {		
 	
 	mot = NULL;
@@ -337,7 +348,7 @@ void New_Line(L_LEX lex, MOT mot) {
 	lex = ajout_queue_lex(lex, NL, mot);
 	mot = NULL;
 
-}
+}*/
 
 
 void main() {
@@ -361,7 +372,6 @@ void main() {
 	printf("end \n");
 	return;
 }
-
 
 
 
