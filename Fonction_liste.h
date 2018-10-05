@@ -5,7 +5,7 @@
 
 
 // Different types de lexemes obtenables
-typedef enum LEXEME {DEBUT, COMMENT, NL, SYMBOLE, DEUX_PTS, DIRECTIVE, VIRGULE, DECIMAL, DECIMAL_ZERO, HEXA, AUTRE, REGISTRE} LEXEME; 
+typedef enum LEXEME {DEBUT, COMMENT, NL, SYMBOLE, DEUX_PTS, DIRECTIVE, VIRGULE, DECIMAL, DECIMAL_ZERO, HEXA, AUTRE, REGISTRE, GUIL, PAR_O, PAR_F} LEXEME; 
 
 
 // Liste chainee qui forme un mot propre a un lexeme 
@@ -37,4 +37,3 @@ void affiche_mot(L_LEX p_lex);
 
 
 #endif
-
