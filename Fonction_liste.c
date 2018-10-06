@@ -96,6 +96,94 @@ void affiche_mot(L_LEX p_lex) {
 }
 
 
+// Gestion erreur caractere
+L_LEX erreur_carac() {
+	printf("erreur de caractere \n");	
+	return NULL;
+}
+
+
+// Gestion virgule 
+void Virgule(L_LEX lex, MOT* mot) {		
+	
+	*mot = NULL;
+	*mot = ajout_queue_mot(*mot, ',');
+	lex = ajout_queue_lex(lex, VIRGULE, *mot);
+	*mot = NULL;
+}
+
+// Gestion nouvelle ligne
+void New_Line(L_LEX lex, MOT* mot) {
+	
+	*mot = NULL;
+	*mot = ajout_queue_mot(*mot, '\n');
+	lex = ajout_queue_lex(lex, NL, *mot);
+	*mot = NULL;
+}
+
+//Gestion PAR_O
+void Par_o(L_LEX lex, MOT *mot) {
+	
+	*mot = NULL;
+	*mot = ajout_queue_mot(*mot, '(');
+	lex = ajout_queue_lex(lex, PAR_O, *mot);
+	*mot = NULL;
+}
+
+//Gestion PAR_F
+void Par_f(L_LEX lex, MOT* mot) {
+	
+	*mot = NULL;
+	*mot = ajout_queue_mot(*mot, ')');
+	lex = ajout_queue_lex(lex, PAR_F, *mot);
+	*mot = NULL;
+}
+
+//Gestion deux points
+void Deux_pts(L_LEX lex, MOT *mot){
+	
+	*mot = NULL;
+	*mot = ajout_queue_mot(*mot, ':');
+	lex = ajout_queue_lex(lex, DEUX_PTS, *mot);
+	*mot = NULL;
+}
+
+
+
+//Test des registres 
+int test_registre( int p, int u){
+	if ((isdigit(u))&&(isdigit(p))){						// Si le deuxieme carac est un nombre
+		if ((p == '0')||(p == '1')||(p == '2')) return 1;			// Registre existant entre 00 et 29
+		else if (p == '3'){
+			if ((u == '0')||(u == '1')) return 1;					// Registre 30 et 31
+			else {
+				return 0;
+				printf("erreur de caractere pour les registres \n");
+			}
+		}
+		else {
+			return 0;
+			printf("erreur de caractere pour les registres \n");
+		}
+	}
+	else if (isdigit(p)) return 1;									// Registre 0 a 9
+	else if ((p == 'a')&&(u == 't')) return 1;						// Mnemonique
+	else if ((p == 'v')&&((u == '0')||(u == '1'))) return 1;
+	else if ((p == 'a')&&((u == '0')||(u == '1')||(u == '2')||(u == '3'))) return 1;
+	else if ((p == 't')&&((u == '0')||(u == '1')||(u == '2')||(u == '3')||(u == '4')||(u == '5')||(u == '6')||(u == '7'))) return 1;
+	else if ((p == 's')&&((u == '0')||(u == '1')||(u == '2')||(u == '3')||(u == '4')||(u == '5')||(u == '6')||(u == '7'))) return 1;
+	else if ((p == 't')&&((u == '8')||(u == '9'))) return 1;
+	else if ((p == 'k')&&((u == '0')||(u == '1'))) return 1;
+	else if ((p == 'g')&&(u == 'p')) return 1;
+	else if ((p == 's')&&(u == 'p')) return 1;
+	else if ((p == 'f')&&(u == 'p')) return 1;
+	else if ((p == 'r')&&(u == 'a')) return 1;
+	else if ((p == 'z')&&(u == 'e')) return 1;
+	else return 0;
+}
+		
+
+
 // TEST :
 
 /*void main() {
