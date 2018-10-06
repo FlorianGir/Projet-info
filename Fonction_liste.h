@@ -34,6 +34,12 @@ MOT ajout_tete_mot(MOT l_mot, int c);
 MOT ajout_queue_mot(MOT l_mot, int c);
 void affiche_lex(L_LEX lex);
 void affiche_mot(L_LEX p_lex);
+void Virgule(L_LEX lex, MOT *mot);
+void New_Line(L_LEX lex, MOT *mot);
+void Par_o(L_LEX lex, MOT *mot);
+void Par_f(L_LEX lex, MOT *mot);
+void Deux_pts(L_LEX lex, MOT *mot);
+int test_registre( int p, int u);
 
 
 #endif
