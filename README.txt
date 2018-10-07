@@ -22,3 +22,6 @@ Cela permet d'afficher une liste de lexèmes avec les mots associés à chaque l
 
 Pour afficher le parcours de l'algorithme en plus de la liste générée en fin, taper :
 $ ./lex_trace
+
+
+Pour visualiser une erreur, ouvrir le fichier miam_sujet.s et modifier la syntaxe (mettre un registre trop élevé par exemple) de manière à générer une erreur. Refaire les commandes de compilation et d'éxécution des programmes.
