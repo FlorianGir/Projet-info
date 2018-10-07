@@ -4,13 +4,6 @@
 #include "Fonction_liste.h"
 
 
-// Gestion erreur caractere
-void erreur_carac() {
-	printf("erreur de caractere \n");	
-	return;
-}
-
-
 L_LEX lect() {					// Renvoie une liste de lexemes
 
 	FILE* fichier;
@@ -18,234 +11,195 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 	int d, b;
 	LEXEME A = DEBUT;			// Etat de l'automate
 	L_LEX lex = NULL;			// Liste des lexemes( pointeur sur liste de lexeme)
-	MOT mot = NULL;				// Liste de sauvegarde du mot ( pointeur sur liste de caracteres)
-	
-	printf("2 \n");		//TEST
+	MOT mot;				// Liste de sauvegarde du mot ( pointeur sur liste de caracteres)
 
 	// Ouverture du fichier :
-	fichier = fopen("TEST.txt", "r");
+	fichier = fopen("miam_sujet.s", "r");
 	if (fichier == NULL) perror("Erreur ouverture fichier");	// Si erreur ouverture
 	
 
-
 	while ( (c = fgetc(fichier)) != EOF) {			// Tant que pas a la fin du fichier
-				
-		
+						
 		switch (A) {			
+
 		
 		case DEBUT:
-			
-			printf("DEBUT %c \n", c);				//TEST
+			mot = NULL;					// Reinitialisation du mot
+			//printf("DEBUT %c \n", c);			//TEST
 			mot = ajout_queue_mot(mot, c);			
 	
-			if (isdigit(c) || (c == '-')) {				// Si nombre dans [0;9]
+			if ((isdigit(c)) || (c == '-')) {		// Si nombre dans [0;9]
 				if (c == '0') A = DECIMAL_ZERO;		// Si c == 0, 0 ou hexadecimal
 				else A = DECIMAL;			// Sinon nombre decimal
 			}
 			else if (isspace(c)) {
 				if (c =='\n') {
-					lex = ajout_queue_lex(lex, NL, mot);	// Si c'est un retour à la ligne, on ajoute NL à la liste de lexeme
-				
+					lex = ajout_queue_lex(lex, NL, mot);	// Si retour a la ligne, on ajoute NL a la liste de lexeme
 				}
-				mot = NULL;				// Reinitialisation du mot
-			}
+							}
 			else if (c == '#') A = COMMENT;			// Si #, c'est un commentaire
 			else if (c == '.') A = DIRECTIVE;		// Si ., c'est une directive
-			else if (c == ',') {
+			else if (c == ',') {				// Si virgule
 				lex = ajout_queue_lex(lex, VIRGULE, mot);
-				mot = NULL;
 			}
 			else if (c == '$') A = REGISTRE;		// Si $, c'est un registre
 			else if (c == '"') A = GUIL;			// Si c'est un guillemet
+			else if (c == '(') Par_o(lex, &mot);		// Si parenthese ouvrante
+			else if (c == ')') Par_f(lex, &mot);		// Si parenthese fermante
 			else if (isalpha(c) || (c == '_')) A = SYMBOLE; 		// isalpha() --> Test lettre 
 			else {
-				printf("erreur de caractere \n");	// Gestion erreur
-				return ; 
+				return erreur_carac();		// Gestion erreur (sort du programme)
 			}
 			break; 
 
 			
 		case DECIMAL_ZERO:
-			printf("DECIMAL_ZERO %c \n", c);			// TEST
 			if (c == 'x') {
 				A = HEXA;				// Si 0x, nombre hexa
 				mot = ajout_queue_mot(mot, c);		// On ajoute x au mot qui est un nombre hexa
 			}
 			else if (isdigit(c)) {
-				A = DECIMAL;				// Sinon c'est un 0 decimal
+				A = DECIMAL;				// Si chiffre, c'est un 0 decimal
 				mot = ajout_queue_mot(mot, c);		// On ajoute le chiffre au mot
 			}
-			else if (isspace(c)) {				// Sinon, fin du nombre
-				lex = ajout_queue_lex(lex, DECIMAL_ZERO, mot);	// C'est un nombre decimal qu'on ajoute a la liste lex
-				mot = NULL;					// Reinitialisation mot
-				if (c =='\n') {					// Si fin de ligne
-					mot = ajout_queue_mot(mot, c);
-					lex = ajout_queue_lex(lex , NL, mot);	// On rentre la NL dans la liste lex
-					mot = NULL; 
-					A = DEBUT;				// On retourne au cas d'initialisation
-				}
-				else A = DEBUT;
+			else if (isspace(c)) {				// Si fin du nombre
+				lex = ajout_queue_lex(lex, DECIMAL_ZERO, mot);	// C'est un nombre decimal qu'on ajoute a la liste lex	
+				A = DEBUT;					// Retour au cas DEBUT, le nbre est termine
+				if (c =='\n') New_Line(lex, &mot); 		// Si retour à la ligne
 			}
 			else if (c == ',') {					// Si virgule
 				lex = ajout_queue_lex(lex, DECIMAL_ZERO, mot);  // On ajoute le nombre decimal a lex
-				mot = NULL;
-				mot = ajout_queue_mot(mot, c);			// Puis on ajoute la virgule dans lex
-				lex = ajout_queue_lex(lex, VIRGULE, mot);	
-				mot = NULL;
+				Virgule(lex, &mot);				// On ajoute la virgule a lex
+				A = DEBUT;					// REtour cas DEBUT
+			}
+			else if (c == '(') {
+				lex = ajout_queue_lex(lex, DECIMAL_ZERO, mot);
+				Par_o(lex, &mot);
 				A = DEBUT;
 			}
-			else erreur_carac();			// Sinon, c'est une erreur de caractere
+			else if (c == ')') {
+				lex = ajout_queue_lex(lex, DECIMAL_ZERO, mot);
+				Par_f(lex, &mot);
+				A = DEBUT;
+			}
+			else return erreur_carac();			// Sinon, c'est une erreur de caractere
 			break;
 		
 		
 		case HEXA:						// Si nombre hexadecimal
-			printf("HEXA %c \n", c);			// TEST
 			if (isxdigit(c)) {
 				A = HEXA;
 				mot = ajout_queue_mot(mot, c);		// Tant que le nbre n'est pas termine, on l'ajoute dans mot
 			}
-			else if (isspace(c)) {
-				lex = ajout_queue_lex(lex, HEXA, mot);
-				mot = NULL;
-				if (c =='\n') {
-					mot = ajout_queue_mot(mot, c);
-					lex = ajout_queue_lex(lex , NL, mot);
-					mot = NULL; 
-					A = DEBUT;
-				}
-				else A = DEBUT;
+			else if (isspace(c)) {				// Si espace ou retour ligne
+				lex = ajout_queue_lex(lex, HEXA, mot);	// On ajoute le mot actuel a la liste lex
+				A = DEBUT;				// On retourne au cas DEBUT
+				if (c =='\n') New_Line(lex, &mot); 	// Si retour ligne, on l'ajoute a la liste lex
 			}
 			else if (c == ',') {
 				lex = ajout_queue_lex(lex, HEXA, mot);
-				mot = NULL;
-				mot = ajout_queue_mot(mot, c);
-				lex = ajout_queue_lex(lex, VIRGULE, mot);
-				mot = NULL;
-				A=DEBUT;
+				Virgule(lex, &mot);
+				A = DEBUT;
 			}
-			else erreur_carac();	
+			else if (c == '(') {
+				lex = ajout_queue_lex(lex, HEXA, mot);
+				Par_o(lex, &mot);
+				A = DEBUT;
+			}
+			else if (c == ')') {
+				lex = ajout_queue_lex(lex, HEXA, mot);
+				Par_f(lex, &mot);
+				A = DEBUT;
+			}
+			else return erreur_carac();	
 			break;
 
 
 		case DECIMAL:						// Si nbre decimal
-			if (isdigit(c)) {
-				A = DECIMAL;
-				mot = ajout_queue_mot(mot, c);
-			}
+			if (isdigit(c)) mot = ajout_queue_mot(mot, c);	// Tant que c est un nombre, on ajoute c a mot
 			else if (isspace(c)) {
 				lex = ajout_queue_lex(lex, DECIMAL, mot);
-				mot = NULL;
-				if (c =='\n') {
-					mot = ajout_queue_mot(mot, c);
-					lex = ajout_queue_lex(lex, NL, mot);
-					mot = NULL;
-					A = DEBUT;
-				}
-				else A = DEBUT;
+				A = DEBUT;
+				if (c =='\n') New_Line(lex, &mot);
 			}
 			else if (c == ',') {
 				lex = ajout_queue_lex(lex, DECIMAL, mot);
-				mot = NULL;
-				mot = ajout_queue_mot(mot, c);
-				lex = ajout_queue_lex(lex, VIRGULE, mot);
-				mot = NULL;
-				A=DEBUT;
+				Virgule(lex, &mot);
+				A = DEBUT;
 			}
-			else erreur_carac();	
+			else if (c == '(') {
+				lex = ajout_queue_lex(lex, DECIMAL, mot);
+				Par_o(lex, &mot);
+				A = DEBUT;
+			}
+			else if (c == ')') {
+				lex = ajout_queue_lex(lex, DECIMAL, mot);
+				Par_f(lex, &mot);
+				A = DEBUT;
+			}
+			else return erreur_carac();	
 			break;
-			
-		case COMMENT:
-			printf("COMMENT %c \n", c);			// TEST
-			if ( c != '\n' ) {
-				A = COMMENT;		
-				mot = ajout_queue_mot(mot, c);
-			}
-				
-			else {
+
+					
+		case COMMENT:						// Si commentaire			
+			if ( c != '\n' ) mot = ajout_queue_mot(mot, c);	// Concaténation
+			else {						// Sinon fin COMMENT
 				lex = ajout_queue_lex(lex, COMMENT, mot);
 				mot = NULL;
-				mot = ajout_queue_mot(mot, c);
-				lex = ajout_queue_lex(lex, NL, mot);
-				mot = NULL;
+				New_Line(lex, &mot);
 				A = DEBUT;
 			}
 			break; 
 
-		case SYMBOLE:
-			printf("SYMBOLE %c \n", c);			// TEST
-			if (isalpha(c)||( c == '_')||isdigit(c)) {
-				A = SYMBOLE; 	
-				mot = ajout_queue_mot(mot, c);
-			}
-			else if (isspace(c)) {
+			
+		case SYMBOLE:						// Si symbole
+			if (isalpha(c)||( c == '_')||isdigit(c)) mot = ajout_queue_mot(mot, c); // Si le caractere est toujours un symbole
+			else if (isspace(c)) {							// Sinon fin symbole
 				lex = ajout_queue_lex(lex, SYMBOLE, mot);
 				mot = NULL;
-				if (c =='\n') {
-					mot = ajout_queue_mot(mot, c);
-					lex = ajout_queue_lex(lex, NL, mot);
-					mot = NULL;
-					A = DEBUT;
-				}
-				else A = DEBUT;
+				A = DEBUT;
+				if (c =='\n') New_Line(lex, &mot);	
 			}
 			else if (c == ',') {
 				lex = ajout_queue_lex(lex, SYMBOLE, mot);
-				mot = NULL;
-				mot = ajout_queue_mot(mot, c);
-				lex = ajout_queue_lex(lex, VIRGULE, mot);
-				mot = NULL;
+				Virgule(lex, &mot);
 				A=DEBUT;
 			}
 			else if (c == ':'){
 				lex = ajout_queue_lex(lex, SYMBOLE, mot);
-				mot = NULL;
-				mot = ajout_queue_mot(mot, c);
-				lex = ajout_queue_lex(lex, DEUX_PTS, mot);
-				mot = NULL;
+				Deux_pts(lex, &mot);
 				A = DEBUT;
-				printf("DEUX_PTS %c \n", c);			// TEST
 			}
-			else erreur_carac();				
+			else return erreur_carac();				
 		   	break; 
 
 
-		case DIRECTIVE:
-			printf("DIRECTIVE %c \n", c);			// TEST
-			if (isalpha(c)){
-				mot = ajout_queue_mot(mot, c);
-			}
+		case DIRECTIVE:						// Si directive
+			if (isalpha(c)) mot = ajout_queue_mot(mot, c);
 			else if (isspace(c)) {
 				lex = ajout_queue_lex(lex, DIRECTIVE, mot);
 				mot = NULL;
-				if (c =='\n') {
-					mot = ajout_queue_mot(mot, c);
-					lex = ajout_queue_lex(lex, NL, mot);
-					mot = NULL;
-					A = DEBUT;
-				}
-				else A = DEBUT;
+				A = DEBUT;
+				if (c =='\n') New_Line(lex, &mot);
 			}
 			else if (c == ',') {
 				lex = ajout_queue_lex(lex, DIRECTIVE, mot);
-				mot = NULL;
-				mot = ajout_queue_mot(mot, c);
-				lex = ajout_queue_lex(lex, VIRGULE, mot);
-				mot = NULL;
-				A=DEBUT;
+				Virgule(lex, &mot);
+				A = DEBUT;
 			}
-			else erreur_carac();		
+			else return erreur_carac();		
 			break; 
 
-		case GUIL:
-			printf("GUIL %c \n", c);			// TEST
-			if((c != '"') && (c != '\\')){
-				mot = ajout_queue_mot(mot, c);
+				
+		case GUIL:					// Si guillemet
+			if((c != '"') && (c != '\\')){		// Si le caractere n'est pas un guillemet ou caractere d'echappement
+				mot = ajout_queue_mot(mot, c);	// On concatene
 			}
-			else if (c == '\\'){
-				c = fgetc(fichier);
-				mot = ajout_queue_mot(mot, c);
+			else if (c == '\\'){			// Si caractere echappement
+				c = fgetc(fichier);		// On prend le caractere suivant
+				mot = ajout_queue_mot(mot, c);	// Et on le concatene
 			}
-			else if (c == '"'){
+			else if (c == '"'){			// Fin GUIL
 				mot = ajout_queue_mot(mot, c);
 				lex = ajout_queue_lex(lex, GUIL, mot);
 				mot = NULL;
@@ -253,127 +207,114 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 			}
 			break;	
 
-		case REGISTRE:
-			printf("REGISTRE %c \n", c);			// TEST
-			d = fgetc(fichier);
+			
+		case REGISTRE:					// Si registre
+			d = fgetc(fichier);			// On prend le caactere suivant
 			b = test_registre( c, d);
-			if ( b == 1){
-				if (!isdigit(d)){
-					if (d == ',') {
-						mot = ajout_queue_mot(mot, c);
-						lex = ajout_queue_lex(lex, REGISTRE, mot);
-						mot = NULL;
-						mot = ajout_queue_mot(mot, d);
-						lex = ajout_queue_lex(lex, VIRGULE, mot);
-						mot = NULL;
-						A = DEBUT;
-					}
-					else if (isspace(d)) {
-						mot = ajout_queue_mot(mot, c);
-						lex = ajout_queue_lex(lex, REGISTRE, mot);
-						mot = NULL;
-						if (d =='\n') {
-							mot = ajout_queue_mot(mot, d);
-							lex = ajout_queue_lex(lex, NL, mot);
-							mot = NULL;
-							A = DEBUT;
-						}
-						else A = DEBUT;
-					}
-					else erreur_carac();
-				}
-				else {
+			if ( b == 1){				// Si c'est un registre
+				
+				if ((isdigit(c))&&(isdigit(d))){
 					mot = ajout_queue_mot(mot, c);
 					mot = ajout_queue_mot(mot, d);
 					lex = ajout_queue_lex(lex, REGISTRE, mot);
 					mot = NULL;
 					A = DEBUT;
 				}
+				else if ((isdigit(c)) && (!isdigit(d))){
+					if (d == ',') {
+						mot = ajout_queue_mot(mot, c);
+						lex = ajout_queue_lex(lex, REGISTRE, mot);
+						Virgule(lex, &mot);
+						A = DEBUT;
+					}
+					else if (isspace(d)) {
+						mot = ajout_queue_mot(mot, c);
+						lex = ajout_queue_lex(lex, REGISTRE, mot);
+						mot = NULL;
+						if (d =='\n') New_Line(lex, &mot);
+						A = DEBUT;
+					}
+					else if (d == '(') {
+						mot = ajout_queue_mot(mot, c);
+						lex = ajout_queue_lex(lex, REGISTRE, mot);
+						Par_o(lex, &mot);
+						A = DEBUT;
+					}
+					else if (d == ')') {
+						mot = ajout_queue_mot(mot, c);
+						lex = ajout_queue_lex(lex, REGISTRE, mot);
+						Par_f(lex, &mot);
+						A = DEBUT;
+					}			
+				}
+				else if ((!isdigit(c))&&(isdigit(d))){
+					mot = ajout_queue_mot(mot, c);
+					mot = ajout_queue_mot(mot, d);
+					lex = ajout_queue_lex(lex, REGISTRE, mot);
+					mot = NULL;
+					A = DEBUT;
+				}
+				else if ((!isdigit(c))&&(!isdigit(d))){
+					if ((c == 'z') && (d == 'e')){
+						mot = ajout_queue_mot(mot, c);
+						mot = ajout_queue_mot(mot, d);
+						if ((c = fgetc(fichier) == 'r') && (d = fgetc(fichier) == 'o')) { 
+							mot = ajout_queue_mot(mot, fgetc(fichier));
+							mot = ajout_queue_mot(mot, fgetc(fichier));
+							lex = ajout_queue_lex(lex, REGISTRE, mot);
+							mot = NULL;
+						}
+						else {
+							return erreur_carac();
+						}
+					}
+					else {
+						mot = ajout_queue_mot(mot, c);
+						mot = ajout_queue_mot(mot, d);
+						lex = ajout_queue_lex(lex, REGISTRE, mot);
+						mot = NULL;
+					}
+					A = DEBUT;
+				}
 			}
-			else {
-				erreur_carac();
+			else { 				// Sinon ce n'est pas un registre valable
+				return erreur_carac();
+				A = DEBUT;
+				mot == NULL;
 			}
 			break;
 		}
 	}
-
-	return lex;
-		
+	return lex;	
 }	
 
 
 
-int test_registre( int p, int u){
-	if ((isdigit(u))&&(isdigit(p))){						// Si le deuxieme carac est un nombre
-		if ((p == '0')||(p == '1')||(p == '2')) return 1;			// Registre existant entre 00 et 29
-		else if (p == '3'){
-			if ((u == '0')||(u == '1')) return 1;					// Registre 30 et 31
-			else {
-				return 0;
-				printf("erreur de caractere pour les registre \n");
-			}
-		}
-		else {
-			return 0;
-			printf("erreur de caractere pour les registre \n");
-		}
-	}
-	else if (isdigit(p)) return 1;									// Registre 0 a 9
-	else {
-		return 0;
-		printf("erreur de caractere pour les registre \n");
-	}
-}
-		
-
-
-
-
-/*// Gestion virgule 
-void Virgule(L_LEX lex, MOT mot) {		
-	
-	mot = NULL;
-	mot = ajout_queue_mot(mot, ',');
-	lex = ajout_queue_lex(lex, VIRGULE, mot);
-	mot = NULL;
-
-}
-
-
-// Gestion nouvelle ligne
-void New_Line(L_LEX lex, MOT mot) {
-	
-	mot = NULL;
-	mot = ajout_queue_mot(mot, '\n');
-	lex = ajout_queue_lex(lex, NL, mot);
-	mot = NULL;
-
-}*/
 
 
 void main() {
 
+	printf("START \n\n");
 	L_LEX lex;
 	L_LEX p;
-	printf("1 \n");		//TEST
-	
+
+	printf("Debut automate \n");
 	lex = lect();
+	printf("Fin automate \n\n");	
 
+	if (lex == NULL) printf("Erreur dans le fichier MIPS \n");
+	else {
+		printf("Affichage des lexèmes et des mots correspondant : \n\n");
+		p = lex;
 	
-	printf("fin lect() \n");	//TEST
-	p = lex;
-	printf("3 \n");
-	while (p != NULL) {
+		while (p != NULL) {
 
-		affiche_lex(p);
-		affiche_mot(p);
-		p = p->suiv;
+			affiche_lex(p);
+			affiche_mot(p);
+			p = p->suiv;
+		}
+		
 	}
-	printf("end \n");
+	printf("\nEND \n");
 	return;
 }
-
-
-
-
-
