@@ -63,7 +63,7 @@ MOT ajout_queue_mot(MOT l_mot, int c) {
 	}	
 }
 
-
+// Affichage des lexemes
 void affiche_lex(L_LEX p_lex) {
 
 	if (p_lex->lex == DEBUT) printf("DEBUT --> ");
@@ -84,6 +84,7 @@ void affiche_lex(L_LEX p_lex) {
 	return;
 }
 
+// Affiche le mot associe a un lexeme
 void affiche_mot(L_LEX p_lex) {
 	MOT q = p_lex->mot;
 	while (q != NULL) {
