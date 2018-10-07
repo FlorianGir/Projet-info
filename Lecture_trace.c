@@ -14,7 +14,7 @@ L_LEX lect() {					// Renvoie une liste de lexemes
 	MOT mot;				// Liste de sauvegarde du mot ( pointeur sur liste de caracteres)
 
 	// Ouverture du fichier :
-	fichier = fopen("miam_sujet.s", "r");
+	fichier = fopen("TEST_OK.s", "r");
 	if (fichier == NULL) perror("Erreur ouverture fichier");	// Si erreur ouverture
 	
 
