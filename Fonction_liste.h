@@ -39,6 +39,7 @@ void New_Line(L_LEX lex, MOT *mot);
 void Par_o(L_LEX lex, MOT *mot);
 void Par_f(L_LEX lex, MOT *mot);
 void Deux_pts(L_LEX lex, MOT *mot);
+void Fin_nbre(int c, L_LEX* lex, MOT* mot, LEXEME type_lexeme, LEXEME* A);
 int test_registre( int p, int u);
 
 
