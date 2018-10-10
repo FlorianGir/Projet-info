@@ -6,7 +6,11 @@
 ##############################################################################################################
 
 
+REMARQUE : Nous ne sommes pas parvenus à créer l'archive en mettant le rapport en format pdf dans le répertoire doc. Nous l'avons donc placé dans le répertoire ARCHIVE_1.
+
+
 L'archive est composée de 9 fichiers :
+
 - TEST_OK.s qui est le fichier en langage MIPS a traiter par le programme sans erreur
 - TEST_ERROR.s qui est identique à TEST_OK.s mais qui contient quant à lui une erreur (registre trop élevé)
 - lecture.c, lecture_trace.c, lecture_fichier_erreur.c, Fonction_liste.c, Fonction_liste.h qui contiennent les programmes développés
@@ -14,12 +18,14 @@ L'archive est composée de 9 fichiers :
 	--> lecture_fichier_erreur.c est identique à lecture.c mais contient un fichier avec une erreur de registre
 	--> Fonction_liste.c contient toutes les fonctions annexes utiles, notamment pour gérer les listes
 	--> Fonction_liste.h contient toutes les déclarations de fonctions ainsi que les structures utile pour gérer les listes de lexèmes
-
 - README.txt (ce fichier)
 - Makefile
 
 
-Pour compiler le programme de test, effectuer la commande :
+Nous avons créer notre propre makefile car nous n'avons pas réutilisé les fonctions embryons fournies. 
+Pour tester nos programmes, se placer dans la racine ARCHIVE_1, puis :
+
+Pour compiler les programmes de test, effectuer la commande :
 $ make 
 
 Pour ensuite éxécuter le programme, taper :
@@ -32,4 +38,4 @@ $ ./lex_trace
 Pour visualiser une erreur syntaxique, taper :
 $ ./lex_error
 
-Pour visualiser d'autres erreurs, ouvrir le fichier TEST_ERROR.s et modifier la syntaxe. Refaire les commandes de compilation et d'éxécution des programmes.
+Pour visualiser d'autres erreurs, ouvrir le fichier TEST_ERROR.s et modifier la syntaxe dans ARCHIVE_1. Refaire les commandes de compilation et d'éxécution des programmes.
