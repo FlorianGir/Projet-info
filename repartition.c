@@ -11,12 +11,11 @@
 
 
 
-
 void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB l_symb){
 
 	
 
-	L_LEX p, attente_op;
+	L_LEX p, attente_op, l_etiquette;
 
 	L_INST q;
 
@@ -24,14 +23,15 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 	ETAT A_memory;
 
-	char* c;
+
 	char tab[100];
 
 	int existe, verif_cond;
-
 	
 
-	int dec_bss = 0;			//! Decalages 
+	//! Decalages 
+
+	int dec_bss = 0;			
 
 	int dec_text = 0;
 
@@ -39,11 +39,12 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 
 
-
+	
 
 	attente_op = NULL;
 
 	p = l_lex;
+	l_etiquette = memory_etiquette(l_lex);
 
 	while (p != NULL) {
 
@@ -55,17 +56,18 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case INIT:
 
-		
+			printf("INIT\n");
+			
 
 			recup_mot(p->mot, tab);				//! recuperation du mot associé au premier lexeme
 
 			
 
-			if (strcmp(c, ".text") == 0) A = TEXT;
+			if (strcmp(tab, ".text") == 0) A = TEXT;
 
-			else if (strcmp(c, ".data") == 0) A = DATA;
+			else if (strcmp(tab, ".data") == 0) A = DATA;
 
-			else if (strcmp(c, ".bss") == 0) A = BSS;
+			else if (strcmp(tab, ".bss") == 0) A = BSS;
 
 			p = p->suiv;
 
@@ -77,17 +79,17 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case TEXT:				//! quand on est dans .text 
 
-			
+			printf("TEXT\n");
 
 			recup_mot(p->mot, tab);
 
 			
 
-			if (strcmp(c, ".data") == 0) A = DATA, p = p->suiv;
+			if (strcmp(tab, ".data") == 0) A = DATA, p = p->suiv;
 
-			else if (strcmp(c, ".bss") == 0) A = BSS, p = p->suiv;
+			else if (strcmp(tab, ".bss") == 0) A = BSS, p = p->suiv;
 
-			else if (p->suiv->mot->c == ':') A = TEXT_COLLE_SYMB;   //! 	LES IF S EFFECTUENT PAR ORDRE D ECRITURE ?
+			else if ((p->suiv)->lex == DEUX_PTS) A = TEXT_COLLE_SYMB;   
 
 			else if (p->lex == SYMBOLE) A = TEXT_SYMB;
 
@@ -101,19 +103,19 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case DATA:				//! quand on est dans .data
 
-		
+			printf("DATA\n");
 
 			recup_mot (p->mot, tab);
 
 			
 
-			if (strcmp(c, ".text") == 0) A = TEXT, p = p->suiv;
+			if (strcmp(tab, ".text") == 0) A = TEXT, p = p->suiv;
 
-			else if (strcmp(c, ".bss") == 0) A = BSS, p = p->suiv;
+			else if (strcmp(tab, ".bss") == 0) A = BSS, p = p->suiv;
 
 			else if (p->lex == DIRECTIVE) A = DATA_DIRECTIVE;
 
-			else if (p->suiv->mot->c == ':') A = DATA_COLLE_SYMB;
+			else if ((p->suiv)->lex == DEUX_PTS) A = DATA_COLLE_SYMB;
 
 			break;
 
@@ -123,17 +125,18 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case BSS:				//! quand on est dans .bss
 
-		
+			printf("BSS\n");
 
 			recup_mot (p->mot, tab);
 
 			
 
-			if (strcmp(c, ".text") == 0) A = TEXT;
+			if (strcmp(tab, ".text") == 0) A = TEXT;
 
-			else if (strcmp(c, ".data") == 0) A = DATA;
+			else if (strcmp(tab, ".data") == 0) A = DATA;
 
-			else if (strcmp(c,".space") == 0) A = BSS_SPACE;
+			else if (strcmp(tab,".space") == 0) A = BSS_SPACE;
+			else if ((p->suiv)->lex == DEUX_PTS) A = DATA_COLLE_BSS;
 
 			p = p->suiv;
 
@@ -145,11 +148,10 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case TEXT_SYMB:				//! on est dans .text et on a un symbole
 
-			
+			printf("TEXT_SYMB\n");
 
-			existe = symb_existe(p->mot);	
-
-
+			existe = symb_existe(p->mot);
+			existe -= 48;	
 
 			if (existe == -1) {
 
@@ -160,10 +162,12 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 			}
 
 			else {
+				
 
-				A = TEST_OP ;
+				A = TEST_OP;
 
-				l_inst = ajout_queue_inst(l_inst, p->mot, SYMBOLE, existe, p->ligne, DECALAGE, NULL);  //! SYMBOLE ? + gérer decalage
+				l_inst = ajout_queue_inst(l_inst, p->mot, SYMBOLE, existe, p->ligne, dec_text, NULL); 
+				dec_text += 4;
 
 			}
 
@@ -177,12 +181,11 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case TEXT_COLLE_SYMB:
 
-	
+			printf("TEXT_COLLE_SYMB\n");
 
-			l_symb = ajout_queue_symbole(l_symb, p->mot, p->ligne, ".text", decalage); //! TRAITER DECALAGE RELATIF
+			l_symb = ajout_queue_symb(l_symb, p->mot, p->ligne, 3, dec_text); 
 
 			A = TEXT;
-
 			p = p->suiv;
 
 			break;
@@ -193,35 +196,39 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case TEST_OP: 			//! le symbole existe, test des operandes
 
-			
+			printf("TEST_OP, %d \n", existe);			
 
-			if ((existe > 1)&&(p->lex == (REGISTRE||DECIMAL||DECIMAL_ZERO||HEXA))){			//! lorsqu il y a encore plus de une operande
+			if (existe > 1) {
+				if (p->lex == REGISTRE || p->lex == DECIMAL || p->lex == DECIMAL_ZERO || p->lex == HEXA ||   {		//! lorsqu il y a encore plus de une operande
+					attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
-				attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
+					A = SEPA_OP;
 
-				A = SEPA_OP;
-
-				existe-- ;
+					existe-- ;
+				}
 
 			}
 
-			else if ((existe == 1)&&(p->lex == (REGISTRE||DECIMAL||DECIMAL_ZERO||HEXA))){		//! lorsqu il reste que une operande
+			else if (existe == 1) {
+				if (p->lex == REGISTRE || p->lex == DECIMAL || p->lex == DECIMAL_ZERO || p->lex == HEXA) {		//! lorsqu il reste que une operande
 
-				attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
+					
+					attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
-				q = l_inst;
+					q = l_inst;
 
-				while(q->suiv != NULL){
+					while(q->suiv != NULL){
 
-					q = q->suiv;
+						q = q->suiv;
 
+					}
+
+					q->operande = attente_op;			//! revoir vu que le maillon est en queue
+
+					attente_op = NULL;
+
+					A = TEXT;
 				}
-
-				q->operande = attente_op;			//! revoir vu que le maillon est en queue
-
-				attente_op = NULL;
-
-				A = TEXT;
 
 			}
 
@@ -249,9 +256,12 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 		case SEPA_OP:						//! test du separateur d'operande
 
-			
+			printf("SEPA_OP\n");
+			affiche_lex(p);
+			printf("\n");
 
-			if ( p->lex == (VIRGULE)) A = TEST_OP;
+			if (p->lex == VIRGULE) A = TEST_OP;
+			else if (p->lex == NL) A = TEXT;
 
 			else {
 
@@ -272,14 +282,16 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 		case DATA_DIRECTIVE:					//! on est dans .data et on a une directive
 
 		
+			recup_mot (p->mot, tab);
+			
 
-			if (strcmp(c, ".byte") == 0) A = DATA_BYTE;
+			if (strcmp(tab, ".byte") == 0) A = DATA_BYTE;
 
-			else if (strcmp(c, ".word") == 0) A = DATA_WORD;
+			else if (strcmp(tab, ".word") == 0) A = DATA_WORD;
 
-			else if (strcmp(c, ".asciiz") == 0) A = DATA_ASCIIZ;
+			else if (strcmp(tab, ".asciiz") == 0) A = DATA_ASCIIZ;
 
-			else if (strcmp(c, ".space") == 0) A = DATA_SPACE;
+			else if (strcmp(tab, ".space") == 0) A = DATA_SPACE;
 
 			else {
 
@@ -309,13 +321,12 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 				if (verif_cond == 0){
 
-					dec_data += 1;			//! Decalage de 1 pour le .byte
-
 					attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
-					l_data = ajout_queue_data(l_data, ".byte", DIRECTIVE, dec_data, p->ligne, attente_op); //! NOMBRE OPERANDE ?
+					l_data = ajout_queue_data(l_data, ".byte", DIRECTIVE, 1, p->ligne, dec_data, attente_op); 
 
 					attente_op = NULL;
+					dec_data += 1;			//! Decalage de 1 pour le .byte
 
 					A = DATA_CHECK_SEPA;
 
@@ -357,13 +368,14 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 				if (verif_cond == 0){
 
-					dec_data += 4;			//! Decalage de 4 pour le .word
+					
 
 					attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
 					l_data = ajout_queue_data(l_data,".word", DIRECTIVE, 1, p->ligne, dec_data, attente_op);
 
 					attente_op = NULL;
+					dec_data += 4;			//! Decalage de 4 pour le .word
 
 					A = DATA_CHECK_SEPA;
 
@@ -401,13 +413,14 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 			if ( p->lex == GUIL) {
 
-				dec_data += nbre_cara(p->mot) - 1; 
+				
 
 				attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
 				l_data = ajout_queue_data( l_data, ".asciiz", DIRECTIVE, 1, p->ligne, dec_data, attente_op);
 
 				attente_op = NULL;
+				dec_data += nbre_cara(p->mot) - 1; 
 
 				A = DATA_CHECK_SEPA;
 
@@ -435,13 +448,14 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 			if ( p->lex == (DECIMAL||DECIMAL_ZERO||HEXA)) {
 
-				dec_data += valeur_deci(p->mot, p->lex);			//! Decalage de c pour le .space
+				
 
 				attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
 				l_data = ajout_queue_data( l_data, ".space", DIRECTIVE, 1, p->ligne, dec_data, attente_op);
 
 				attente_op = NULL;
+				dec_data += valeur_deci(p->mot, p->lex);			//! Decalage de c pour le .space
 
 				A = DATA_CHECK_SEPA;
 
@@ -499,7 +513,7 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 			
 
-			l_symb = ajout_queue_symbole(l_symb, p->mot, p->ligne, ".data", decalage); //! TRAITER DECALAGE RELATIF
+			l_symb = ajout_queue_symb(l_symb, p->mot, p->ligne, 2, dec_data); 
 
 			A = DATA;
 
@@ -517,13 +531,12 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 
 			if ( p->lex == (DECIMAL||DECIMAL_ZERO||HEXA)) {
 
-				dec_bss += valeur_deci(p->mot, p->lex);   
-
 				attente_op = ajout_queue_lex(attente_op, p->lex, p->mot, p->ligne);
 
-				l_bss = ajout_queue_bss( l_bss, ".space", DIRECTIVE, 1, p->ligne, DECALAGE, attente_op);
+				l_bss = ajout_queue_bss( l_bss, ".space", DIRECTIVE, 1, p->ligne, dec_bss, attente_op);
 
 				attente_op = NULL;
+				dec_bss += valeur_deci(p->mot, p->lex); 
 
 				A = BSS_CHECK_SEPA;
 
@@ -572,6 +585,21 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 			p = p->suiv;
 
 			break;
+				
+				
+		case DATA_COLLE_BSS: 
+
+		
+
+			
+
+			l_symb = ajout_queue_symb(l_symb, p->mot, p->ligne, 1, dec_bss); 
+
+			A = BSS;
+
+			p = p->suiv;
+
+			break;
 
 		
 
@@ -588,3 +616,66 @@ void repartition(L_LEX l_lex, L_INST l_inst, L_DATA l_data, L_BSS l_bss, L_SYMB 
 			
 
 }
+
+			
+
+			
+
+			
+
+			
+
+			
+
+
+
+void main(int nargs, char* argv[]) {
+
+	printf("START \n\n");
+	L_LEX lex;
+	L_LEX p;
+	L_INST l_inst = NULL;
+	L_DATA l_data = NULL;
+	L_BSS l_bss = NULL;
+	L_SYMB l_symb = NULL;
+	FILE* fichier;
+	//! Ouverture du fichier :
+	fichier = fopen(argv[1], "r");
+	if (fichier == NULL) perror("Erreur ouverture fichier");	//! Si erreur ouverture
+
+	printf("Debut automate 1  \n");
+	lex = lect(fichier);
+	printf("Fin automate 1 \n\n");	
+
+	if (lex == NULL) printf("Erreur dans le fichier MIPS \n");
+	
+	
+	printf("Debut automate 2  \n");
+	repartition(lex, l_inst, l_data, l_bss, l_symb);
+	printf("Fin automate 2 \n\n");
+	
+	fclose(fichier);
+
+	printf("\nEND \n");
+	return;
+}		
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
