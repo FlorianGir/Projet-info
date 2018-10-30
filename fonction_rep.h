@@ -11,7 +11,7 @@
 
 //! Differents etats definis dans l'automate
 
-typedef enum ETAT {INIT, TEXT, DATA, BSS, TEXT_SYMB, TEST_OP, SEPA_OP, TEXT_COLLE_SYMB, DATA_DIRECTIVE, DATA_BYTE, DATA_WORD, DATA_ASCIIZ, DATA_SPACE, DATA_COLLE_SYMB, BSS_SPACE, DATA_CHECK_SEPA, BSS_CHECK_SEPA} ETAT; 
+typedef enum ETAT {INIT, TEXT, DATA, BSS, TEXT_SYMB, TEST_OP, SEPA_OP, TEXT_COLLE_SYMB, DATA_DIRECTIVE, DATA_BYTE, DATA_WORD, DATA_ASCIIZ, DATA_SPACE, DATA_COLLE_SYMB, BSS_SPACE, DATA_CHECK_SEPA, BSS_CHECK_SEPA, DATA_COLLE_BSS} ETAT; 
 
 
 
@@ -95,7 +95,7 @@ struct SYMB {
 
 	int ligne;
 
-	char section[20];
+	int section;  		//! 1 --> bss, 2 --> data, 3 --> text
 
 	int decalage;		//! decalage relatif dans la section
 
@@ -116,7 +116,7 @@ L_DATA ajout_queue_data(L_DATA l_data, char mot[20], LEXEME lex, int nb_op, int 
 
 L_BSS ajout_queue_bss(L_BSS l_bss, char mot[20], LEXEME lex, int nb_op, int ligne, int decalage, L_LEX operande);
 
-L_SYMB ajout_queue_symb(L_SYMB l_symb, MOT mot, int ligne, char section[20], int decalage);
+L_SYMB ajout_queue_symb(L_SYMB l_symb, MOT mot, int ligne, int section, int decalage);
 
 void recup_mot(MOT mot, char tab[]);
 
