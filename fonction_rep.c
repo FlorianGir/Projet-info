@@ -135,7 +135,7 @@ L_BSS ajout_queue_bss(L_BSS l_bss, char mot[20], LEXEME lex, int nb_op, int lign
 
 
 
-L_SYMB ajout_queue_symb(L_SYMB l_symb, MOT mot, int ligne, char section[20], int decalage) {
+L_SYMB ajout_queue_symb(L_SYMB l_symb, MOT mot, int ligne, int section, int decalage) {
 
 	L_SYMB p;
 
@@ -145,7 +145,7 @@ L_SYMB ajout_queue_symb(L_SYMB l_symb, MOT mot, int ligne, char section[20], int
 
 	p->ligne = ligne;
 
-	strcpy(p->section, section);
+	p->section = section;
 
 	p->decalage = decalage;
 
@@ -433,5 +433,6 @@ int valeur_deci(MOT mot, LEXEME lex) {
 
 }
 
+	
 	
 
